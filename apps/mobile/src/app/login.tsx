@@ -9,8 +9,8 @@ import { authStorage } from '../services/authStorage';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('user.a@example.com');
-  const [password, setPassword] = useState('password123456');
+  const [email, setEmail] = useState('doandinhdong1405@gmail.com');
+  const [password, setPassword] = useState('DingDong@2026!');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 

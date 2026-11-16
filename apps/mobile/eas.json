@@ -13,7 +13,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://dingdongnote-api.railway.app/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api-production-5cfbf53d.up.railway.app/api/v1"
       }
     },
     "production": {
@@ -21,7 +21,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://dingdongnote-api.railway.app/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api-production-5cfbf53d.up.railway.app/api/v1"
       }
     }
   },
