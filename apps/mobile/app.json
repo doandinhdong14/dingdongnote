@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "DingDongNote",
+    "slug": "dingdongnote",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "dingdongnote",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#FAF9F6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dingdongnote.app"
+    },
+    "android": {
+      "package": "com.dingdongnote.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF9F6",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6D4AFF"
+        }
+      ]
+    ]
+  }
+}

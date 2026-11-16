@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String             @id @default(uuid())
+  emailNormalized String             @unique @map("email_normalized")
+  passwordHash    String             @map("password_hash")
+  displayName     String             @map("display_name")
+  timezone        String             @default("Asia/Ho_Chi_Minh")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  sessions        Session[]
+  notes           Note[]
+  tasks           Task[]
+  dailyFocuses    DailyFocus[]
+  habits          Habit[]
+  habitCompletions HabitCompletion[]
+  categories      Category[]
+  transactions    Transaction[]
+  taskReminders   TaskReminder[]
+  mutations       ProcessedMutation[]
+  snapshots       SyncSnapshot[]
+  accountTokens   AccountToken[]
+
+  @@map("users")
+}
+
+model Session {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  refreshHash String    @unique @map("refresh_hash")
+  familyId    String    @map("family_id")
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  deviceLabel String?   @map("device_label")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Note {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  title     String    @default("")
+  body      String    @default("")
+  pinned    Boolean   @default(false)
+  version   Int       @default(1)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@index([userId, pinned, updatedAt])
+  @@index([userId, updatedAt, id])
+  @@map("notes")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  title       String
+  description String?
+  plannedDate String?   @map("planned_date")
+  dueAt       DateTime? @map("due_at")
+  priority    String    @default("normal")
+  status      String    @default("pending")
+  completedAt DateTime? @map("completed_at")
+  noteId      String?   @map("note_id")
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note         Note?          @relation(fields: [noteId], references: [id], onDelete: SetNull)
+  dailyFocuses DailyFocus[]
+  reminders    TaskReminder[]
+
+  @@index([userId, plannedDate, status])
+  @@index([userId, updatedAt, id])
+  @@map("tasks")
+}
+
+model DailyFocus {
+  userId    String @map("user_id")
+  localDate String @map("local_date")
+  taskId    String @map("task_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@id([userId, localDate])
+  @@map("daily_focus")
+}
+
+model Habit {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  name       String
+  startDate  String    @map("start_date")
+  archivedAt DateTime? @map("archived_at")
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedules   HabitSchedule[]
+  completions HabitCompletion[]
+
+  @@index([userId, updatedAt, id])
+  @@map("habits")
+}
+
+model HabitSchedule {
+  id           String   @id @default(uuid())
+  habitId      String   @map("habit_id")
+  validFrom    String   @map("valid_from")
+  validTo      String?  @map("valid_to")
+  weekdays     Int[]
+  reminderTime String?  @map("reminder_time")
+  timezone     String   @default("Asia/Ho_Chi_Minh")
+  mode         String   @default("notification")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@index([habitId, validFrom])
+  @@map("habit_schedules")
+}
+
+model HabitCompletion {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  habitId     String    @map("habit_id")
+  localDate   String    @map("local_date")
+  completedAt DateTime  @default(now()) @map("completed_at")
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, habitId, localDate])
+  @@index([userId, localDate])
+  @@index([userId, updatedAt, id])
+  @@map("habit_completions")
+}
+
+model Category {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  name       String
+  type       String
+  archivedAt DateTime? @map("archived_at")
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId, updatedAt, id])
+  @@map("categories")
+}
+
+model Transaction {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  categoryId      String    @map("category_id")
+  type            String
+  amount          BigInt
+  currency        String    @default("VND")
+  transactionDate String    @map("transaction_date")
+  note            String?
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId, transactionDate, id])
+  @@index([userId, updatedAt, id])
+  @@map("transactions")
+}
+
+model TaskReminder {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  taskId      String    @map("task_id")
+  scheduledAt DateTime  @map("scheduled_at")
+  timezone    String    @default("Asia/Ho_Chi_Minh")
+  mode        String    @default("notification")
+  enabled     Boolean   @default(true)
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([userId, taskId])
+  @@map("task_reminders")
+}
+
+model ProcessedMutation {
+  userId       String   @map("user_id")
+  mutationId   String   @map("mutation_id")
+  payloadHash  String   @map("payload_hash")
+  responseJson String   @map("response_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, mutationId])
+  @@map("processed_mutations")
+}
+
+model SyncSnapshot {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  expiresAt    DateTime @map("expires_at")
+  snapshotData String   @map("snapshot_data")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("sync_snapshots")
+}
+
+model AccountToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  purpose   String
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("account_tokens")
+}
